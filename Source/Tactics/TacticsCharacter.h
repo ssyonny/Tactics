@@ -9,8 +9,8 @@
 /**
  *  A controllable top-down perspective character
  */
-UCLASS()
-class ATacticsCharacter : public ACharacter
+UCLASS(Blueprintable, BlueprintType)
+class TACTICS_API ATacticsCharacter : public ACharacter
 {
 	GENERATED_BODY()
 

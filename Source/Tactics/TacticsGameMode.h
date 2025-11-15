@@ -11,8 +11,8 @@
  *  Sets the default gameplay framework classes
  *  Check the Blueprint derived class for the set values
  */
-UCLASS()
-class ATacticsGameMode : public AGameModeBase
+UCLASS(Blueprintable)
+class TACTICS_API ATacticsGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
