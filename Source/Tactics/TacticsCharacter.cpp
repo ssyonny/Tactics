@@ -10,6 +10,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
+#include "UObject/ConstructorHelpers.h"
 
 ATacticsCharacter::ATacticsCharacter()
 {
@@ -75,6 +78,9 @@ void ATacticsCharacter::PerformAttack()
 	// Set cooldown
 	CurrentAttackCooldown = AttackCooldown;
 
+	// Play attack animation
+	PlayAttackAnimation();
+
 	// Perform sphere trace to detect enemies in range
 	FVector StartLocation = GetActorLocation();
 	FVector EndLocation = StartLocation + (GetActorForwardVector() * AttackRange);
@@ -112,7 +118,7 @@ void ATacticsCharacter::PerformAttack()
 	}
 
 	// Play attack animation
-	// TODO: Add animation montage
+	PlayAttackAnimation();
 	UE_LOG(LogTactics, Log, TEXT("Attack performed! Cooldown: %f"), AttackCooldown);
 }
 
@@ -126,4 +132,42 @@ float ATacticsCharacter::CalculateDamage(float TargetArmor) const
 	// Damage formula: DamageTaken = round(BaseDamage * 100/(100+Armor))
 	float DamageMultiplier = 100.0f / (100.0f + TargetArmor);
 	return FMath::RoundToFloat(BaseDamage * DamageMultiplier);
+}
+
+void ATacticsCharacter::PlayAttackAnimation()
+{
+	// Select random attack animation
+	UAnimMontage* SelectedMontage = nullptr;
+	int32 RandomAttack = FMath::RandRange(1, 3);
+	
+	switch (RandomAttack)
+	{
+		case 1:
+			SelectedMontage = AttackMontage1;
+			break;
+		case 2:
+			SelectedMontage = AttackMontage2;
+			break;
+		case 3:
+			SelectedMontage = AttackMontage3;
+			break;
+	}
+
+	if (SelectedMontage && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		UE_LOG(LogTactics, Warning, TEXT("Playing attack animation: %s"), *SelectedMontage->GetName());
+		GetMesh()->GetAnimInstance()->Montage_Play(SelectedMontage);
+	}
+	else
+	{
+		UE_LOG(LogTactics, Warning, TEXT("No attack animation available, using fallback"));
+		// If no animation, the attack logic already executed above
+	}
+}
+
+void ATacticsCharacter::OnAttackAnimationFinished()
+{
+	UE_LOG(LogTactics, Warning, TEXT("Attack animation finished"));
+	// This function can be called from animation blueprint when montage finishes
+	// Additional logic can be added here if needed
 }

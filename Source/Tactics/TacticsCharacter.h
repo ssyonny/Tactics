@@ -51,6 +51,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float BaseDamage = 20.0f;
 
+	/** Attack animation montages */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	class UAnimMontage* AttackMontage1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	class UAnimMontage* AttackMontage2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	class UAnimMontage* AttackMontage3;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackRange = 200.0f;
 
@@ -66,6 +76,14 @@ protected:
 	/** Apply damage to target using damage formula */
 	UFUNCTION(BlueprintCallable, Category="Combat")
 	float CalculateDamage(float TargetArmor) const;
+
+	/** Play random attack animation */
+	UFUNCTION(BlueprintCallable, Category="Animation")
+	void PlayAttackAnimation();
+
+	/** Called when attack animation finishes */
+	UFUNCTION(BlueprintCallable, Category="Animation")
+	void OnAttackAnimationFinished();
 
 };
 
