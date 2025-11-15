@@ -319,24 +319,24 @@ void ATacticsPlayerController::UpdateCharacterRotation()
 
 void ATacticsPlayerController::TestInputSystem()
 {
-	UE_LOG(LogTactics, Warning, TEXT("=== INPUT SYSTEM TEST ===\"));
-	UE_LOG(LogTactics, Warning, TEXT(\"IsLocalPlayerController: %s\"), IsLocalPlayerController() ? TEXT(\"YES\") : TEXT(\"NO\"));
-	UE_LOG(LogTactics, Warning, TEXT(\"DefaultMappingContext: %s\"), DefaultMappingContext ? *DefaultMappingContext->GetName() : TEXT(\"NULL\"));
-	UE_LOG(LogTactics, Warning, TEXT(\"MoveAction: %s\"), MoveAction ? *MoveAction->GetName() : TEXT(\"NULL\"));
-	UE_LOG(LogTactics, Warning, TEXT(\"AttackAction: %s\"), AttackAction ? *AttackAction->GetName() : TEXT(\"NULL\"));
+	UE_LOG(LogTactics, Warning, TEXT("=== INPUT SYSTEM TEST ==="));
+	UE_LOG(LogTactics, Warning, TEXT("IsLocalPlayerController: %s"), IsLocalPlayerController() ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTactics, Warning, TEXT("DefaultMappingContext: %s"), DefaultMappingContext ? *DefaultMappingContext->GetName() : TEXT("NULL"));
+	UE_LOG(LogTactics, Warning, TEXT("MoveAction: %s"), MoveAction ? *MoveAction->GetName() : TEXT("NULL"));
+	UE_LOG(LogTactics, Warning, TEXT("AttackAction: %s"), AttackAction ? *AttackAction->GetName() : TEXT("NULL"));
 	
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
-		UE_LOG(LogTactics, Warning, TEXT(\"Enhanced Input Subsystem: FOUND\"));
+		UE_LOG(LogTactics, Warning, TEXT("Enhanced Input Subsystem: FOUND"));
 		const TArray<FEnhancedInputMappingQuery> Mappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::W);
-		UE_LOG(LogTactics, Warning, TEXT(\"Active W key mappings: %d\"), Mappings.Num());
+		UE_LOG(LogTactics, Warning, TEXT("Active W key mappings: %d"), Mappings.Num());
 		
 		const TArray<FEnhancedInputMappingQuery> RMBMappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::RightMouseButton);
-		UE_LOG(LogTactics, Warning, TEXT(\"Active RMB mappings: %d\"), RMBMappings.Num());
+		UE_LOG(LogTactics, Warning, TEXT("Active RMB mappings: %d"), RMBMappings.Num());
 	}
 	else
 	{
-		UE_LOG(LogTactics, Error, TEXT(\"Enhanced Input Subsystem: NOT FOUND\"));
+		UE_LOG(LogTactics, Error, TEXT("Enhanced Input Subsystem: NOT FOUND"));
 	}
-	UE_LOG(LogTactics, Warning, TEXT(\"======================\"));
+	UE_LOG(LogTactics, Warning, TEXT("======================"));
 }
