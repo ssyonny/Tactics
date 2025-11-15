@@ -9,7 +9,7 @@
 /**
  *  A controllable top-down perspective character
  */
-UCLASS(abstract)
+UCLASS()
 class ATacticsCharacter : public ACharacter
 {
 	GENERATED_BODY()

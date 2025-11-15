@@ -17,7 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Player controller for a top-down perspective game.
  *  Implements point and click based controls
  */
-UCLASS(abstract)
+UCLASS()
 class ATacticsPlayerController : public APlayerController
 {
 	GENERATED_BODY()
