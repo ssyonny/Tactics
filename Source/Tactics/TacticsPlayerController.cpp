@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Engine/LocalPlayer.h"
 #include "Tactics.h"
 
@@ -23,6 +26,53 @@ ATacticsPlayerController::ATacticsPlayerController()
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
 	FollowTime = 0.f;
+
+	// Fallback: Auto-load input assets if not set via Blueprint
+	// Mapping Context
+	if (!DefaultMappingContext)
+	{
+		static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC(TEXT("/Game/TopDown/Input/IMC_Default.IMC_Default"));
+		if (IMC.Succeeded())
+		{
+			DefaultMappingContext = IMC.Object;
+		}
+	}
+
+	// Click/Touch actions (from template)
+	if (!SetDestinationClickAction)
+	{
+		static ConstructorHelpers::FObjectFinder<UInputAction> IA_Click(TEXT("/Game/TopDown/Input/Actions/IA_SetDestination_Click.IA_SetDestination_Click"));
+		if (IA_Click.Succeeded())
+		{
+			SetDestinationClickAction = IA_Click.Object;
+		}
+	}
+	if (!SetDestinationTouchAction)
+	{
+		static ConstructorHelpers::FObjectFinder<UInputAction> IA_Touch(TEXT("/Game/TopDown/Input/Actions/IA_SetDestination_Touch.IA_SetDestination_Touch"));
+		if (IA_Touch.Succeeded())
+		{
+			SetDestinationTouchAction = IA_Touch.Object;
+		}
+	}
+
+	// New actions (WASD move & attack)
+	if (!MoveAction)
+	{
+		static ConstructorHelpers::FObjectFinder<UInputAction> IA_Move(TEXT("/Game/TopDown/Input/Actions/IA_Move.IA_Move"));
+		if (IA_Move.Succeeded())
+		{
+			MoveAction = IA_Move.Object;
+		}
+	}
+	if (!AttackAction)
+	{
+		static ConstructorHelpers::FObjectFinder<UInputAction> IA_Attack(TEXT("/Game/TopDown/Input/Actions/IA_Attack.IA_Attack"));
+		if (IA_Attack.Succeeded())
+		{
+			AttackAction = IA_Attack.Object;
+		}
+	}
 }
 
 void ATacticsPlayerController::SetupInputComponent()
@@ -33,32 +83,47 @@ void ATacticsPlayerController::SetupInputComponent()
 	// Only set up input on local player controllers
 	if (IsLocalPlayerController())
 	{
-		// Add Input Mapping Context
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		// Add Input Mapping Context (if available)
+		if (DefaultMappingContext)
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			}
 		}
 
 		// Set up action bindings
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 		{
-			// Setup mouse input events
-			EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ATacticsPlayerController::OnInputStarted);
-			EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnSetDestinationTriggered);
-			EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ATacticsPlayerController::OnSetDestinationReleased);
-			EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &ATacticsPlayerController::OnSetDestinationReleased);
+			// Setup mouse input events (if actions are valid)
+			if (SetDestinationClickAction)
+			{
+				EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ATacticsPlayerController::OnInputStarted);
+				EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnSetDestinationTriggered);
+				EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ATacticsPlayerController::OnSetDestinationReleased);
+				EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &ATacticsPlayerController::OnSetDestinationReleased);
+			}
 
-			// Setup touch input events
-			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &ATacticsPlayerController::OnInputStarted);
-			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnTouchTriggered);
-			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATacticsPlayerController::OnTouchReleased);
-			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATacticsPlayerController::OnTouchReleased);
+			// Setup touch input events (if action is valid)
+			if (SetDestinationTouchAction)
+			{
+				EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &ATacticsPlayerController::OnInputStarted);
+				EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnTouchTriggered);
+				EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATacticsPlayerController::OnTouchReleased);
+				EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATacticsPlayerController::OnTouchReleased);
+			}
 
-			// Setup WASD movement
-			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnMoveTriggered);
+			// Setup WASD movement (if action is valid)
+			if (MoveAction)
+			{
+				EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnMoveTriggered);
+			}
 
-			// Setup attack
-			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnAttackTriggered);
+			// Setup attack (if action is valid)
+			if (AttackAction)
+			{
+				EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnAttackTriggered);
+			}
 		}
 		else
 		{
