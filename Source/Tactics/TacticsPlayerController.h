@@ -100,7 +100,7 @@ private:
 	void UpdateCharacterRotation();
 
 	/** Debug function to test input system */
-	UFUNCTION(CallInEditor = true)
+	UFUNCTION(Exec)
 	void TestInputSystem();
 
 };
