@@ -53,6 +53,12 @@ void ATacticsPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnTouchTriggered);
 			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATacticsPlayerController::OnTouchReleased);
 			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATacticsPlayerController::OnTouchReleased);
+
+			// Setup WASD movement
+			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnMoveTriggered);
+
+			// Setup attack
+			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnAttackTriggered);
 		}
 		else
 		{
@@ -122,4 +128,56 @@ void ATacticsPlayerController::OnTouchReleased()
 {
 	bIsTouch = false;
 	OnSetDestinationReleased();
+}
+
+void ATacticsPlayerController::OnMoveTriggered(const FInputActionValue& Value)
+{
+	// Get the 2D input value (WASD)
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+
+	// Get the controlled pawn
+	APawn* ControlledPawn = GetPawn();
+	if (ControlledPawn != nullptr)
+	{
+		// Calculate movement direction based on camera rotation
+		const FRotator YawRotation(0, GetControlRotation().Yaw, 0);
+		
+		// Forward/backward direction
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		ControlledPawn->AddMovementInput(ForwardDirection, MovementVector.Y);
+		
+		// Right/left direction
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		ControlledPawn->AddMovementInput(RightDirection, MovementVector.X);
+
+		// Update rotation to face mouse cursor
+		UpdateCharacterRotation();
+	}
+}
+
+void ATacticsPlayerController::OnAttackTriggered()
+{
+	// Get the controlled character
+	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(GetPawn()))
+	{
+		// Perform attack
+		ControlledCharacter->PerformAttack();
+	}
+}
+
+void ATacticsPlayerController::UpdateCharacterRotation()
+{
+	// Get hit result under cursor
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		// Calculate direction from character to cursor
+		const FVector Direction = Hit.Location - ControlledPawn->GetActorLocation();
+		const FRotator NewRotation = FRotator(0.0f, Direction.Rotation().Yaw, 0.0f);
+		
+		// Smoothly rotate character
+		ControlledPawn->SetActorRotation(NewRotation);
+	}
 }

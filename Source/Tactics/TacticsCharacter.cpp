@@ -58,5 +58,72 @@ void ATacticsCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-	// stub
+	// Update attack cooldown
+	if (CurrentAttackCooldown > 0.0f)
+	{
+		CurrentAttackCooldown -= DeltaSeconds;
+	}
+}
+
+void ATacticsCharacter::PerformAttack()
+{
+	if (!CanAttack())
+	{
+		return;
+	}
+
+	// Set cooldown
+	CurrentAttackCooldown = AttackCooldown;
+
+	// Perform sphere trace to detect enemies in range
+	FVector StartLocation = GetActorLocation();
+	FVector EndLocation = StartLocation + (GetActorForwardVector() * AttackRange);
+
+	// Setup collision query params
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	// Perform sphere trace
+	TArray<FHitResult> HitResults;
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		HitResults,
+		StartLocation,
+		EndLocation,
+		FQuat::Identity,
+		ECollisionChannel::ECC_Pawn,
+		FCollisionShape::MakeSphere(50.0f),
+		QueryParams
+	);
+
+	if (bHit)
+	{
+		for (const FHitResult& Hit : HitResults)
+		{
+			if (AActor* HitActor = Hit.GetActor())
+			{
+				// Calculate damage (assume 0 armor for now, will be updated later)
+				float Damage = CalculateDamage(0.0f);
+				
+				// Apply damage
+				// TODO: Implement damage system
+				UE_LOG(LogTactics, Log, TEXT("Hit %s with %f damage"), *HitActor->GetName(), Damage);
+			}
+		}
+	}
+
+	// Play attack animation
+	// TODO: Add animation montage
+	UE_LOG(LogTactics, Log, TEXT("Attack performed! Cooldown: %f"), AttackCooldown);
+}
+
+bool ATacticsCharacter::CanAttack() const
+{
+	return CurrentAttackCooldown <= 0.0f;
+}
+
+float ATacticsCharacter::CalculateDamage(float TargetArmor) const
+{
+	// Damage formula: DamageTaken = round(BaseDamage * 100/(100+Armor))
+	float DamageMultiplier = 100.0f / (100.0f + TargetArmor);
+	return FMath::RoundToFloat(BaseDamage * DamageMultiplier);
 }

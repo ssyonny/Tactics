@@ -35,11 +35,37 @@ public:
 	/** Update */
 	virtual void Tick(float DeltaSeconds) override;
 
+	/** Perform basic attack */
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	void PerformAttack();
+
 	/** Returns the camera component **/
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 
 	/** Returns the Camera Boom component **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+protected:
+
+	/** Combat properties */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float BaseDamage = 20.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackRange = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackCooldown = 0.5f;
+
+	/** Current attack cooldown timer */
+	float CurrentAttackCooldown = 0.0f;
+
+	/** Check if can attack */
+	bool CanAttack() const;
+
+	/** Apply damage to target using damage formula */
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	float CalculateDamage(float TargetArmor) const;
 
 };
 

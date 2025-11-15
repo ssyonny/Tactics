@@ -44,6 +44,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* SetDestinationTouchAction;
 
+	/** Move Input Action (WASD) */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* MoveAction;
+
+	/** Attack Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AttackAction;
+
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
@@ -72,6 +80,17 @@ protected:
 	void OnSetDestinationReleased();
 	void OnTouchTriggered();
 	void OnTouchReleased();
+
+	/** WASD Movement handler */
+	void OnMoveTriggered(const FInputActionValue& Value);
+
+	/** Attack handler */
+	void OnAttackTriggered();
+
+private:
+
+	/** Update character rotation to face mouse cursor */
+	void UpdateCharacterRotation();
 
 };
 
