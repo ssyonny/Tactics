@@ -122,7 +122,12 @@ void ATacticsPlayerController::SetupInputComponent()
 			// Setup attack (if action is valid)
 			if (AttackAction)
 			{
+				UE_LOG(LogTactics, Warning, TEXT("Binding IA_Attack to OnAttackTriggered"));
 				EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATacticsPlayerController::OnAttackTriggered);
+			}
+			else
+			{
+				UE_LOG(LogTactics, Error, TEXT("AttackAction is null! Cannot bind attack input."));
 			}
 		}
 		else
@@ -222,11 +227,27 @@ void ATacticsPlayerController::OnMoveTriggered(const FInputActionValue& Value)
 
 void ATacticsPlayerController::OnAttackTriggered()
 {
+	UE_LOG(LogTactics, Warning, TEXT("OnAttackTriggered called!"));
+	
 	// Get the controlled character
-	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(GetPawn()))
+	APawn* CurrentPawn = GetPawn();
+	if (!CurrentPawn)
 	{
+		UE_LOG(LogTactics, Error, TEXT("No pawn possessed!"));
+		return;
+	}
+	
+	UE_LOG(LogTactics, Warning, TEXT("Current pawn class: %s"), *CurrentPawn->GetClass()->GetName());
+	
+	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(CurrentPawn))
+	{
+		UE_LOG(LogTactics, Warning, TEXT("Cast to ATacticsCharacter successful!"));
 		// Perform attack
 		ControlledCharacter->PerformAttack();
+	}
+	else
+	{
+		UE_LOG(LogTactics, Error, TEXT("Cast to ATacticsCharacter failed! Pawn class: %s"), *CurrentPawn->GetClass()->GetName());
 	}
 }
 
