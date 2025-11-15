@@ -73,6 +73,12 @@ protected:
 
 	/** Initialize input bindings */
 	virtual void SetupInputComponent() override;
+
+	/** Called when the game starts */
+	virtual void BeginPlay() override;
+
+	/** Called when possessing a pawn */
+	virtual void Possess(APawn* InPawn) override;
 	
 	/** Input handlers */
 	void OnInputStarted();

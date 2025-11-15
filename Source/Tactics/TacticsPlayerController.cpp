@@ -77,12 +77,17 @@ ATacticsPlayerController::ATacticsPlayerController()
 
 void ATacticsPlayerController::SetupInputComponent()
 {
+	UE_LOG(LogTactics, Warning, TEXT("SetupInputComponent called for %s"), *GetNameSafe(this));
+	
 	// set up gameplay key bindings
 	Super::SetupInputComponent();
 
 	// Only set up input on local player controllers
 	if (IsLocalPlayerController())
 	{
+		UE_LOG(LogTactics, Warning, TEXT("Is Local Player Controller - setting up input"));
+		UE_LOG(LogTactics, Warning, TEXT("DefaultMappingContext: %s"), DefaultMappingContext ? TEXT("Valid") : TEXT("NULL"));
+		UE_LOG(LogTactics, Warning, TEXT("AttackAction: %s"), AttackAction ? TEXT("Valid") : TEXT("NULL"));
 		// Add Input Mapping Context (if available)
 		if (DefaultMappingContext)
 		{
@@ -135,6 +140,20 @@ void ATacticsPlayerController::SetupInputComponent()
 			UE_LOG(LogTactics, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 		}
 	}
+}
+
+void ATacticsPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+	UE_LOG(LogTactics, Warning, TEXT("PlayerController BeginPlay called: %s"), *GetNameSafe(this));
+	UE_LOG(LogTactics, Warning, TEXT("Current Pawn: %s"), *GetNameSafe(GetPawn()));
+}
+
+void ATacticsPlayerController::Possess(APawn* InPawn)
+{
+	Super::Possess(InPawn);
+	UE_LOG(LogTactics, Warning, TEXT("PlayerController Possess called with pawn: %s"), *GetNameSafe(InPawn));
+	UE_LOG(LogTactics, Warning, TEXT("Pawn class: %s"), InPawn ? *InPawn->GetClass()->GetName() : TEXT("NULL"));
 }
 
 void ATacticsPlayerController::OnInputStarted()
