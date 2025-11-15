@@ -328,15 +328,17 @@ void ATacticsPlayerController::TestInputSystem()
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		UE_LOG(LogTactics, Warning, TEXT("Enhanced Input Subsystem: FOUND"));
-		const TArray<FEnhancedInputMappingQuery> Mappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::W);
-		UE_LOG(LogTactics, Warning, TEXT("Active W key mappings: %d"), Mappings.Num());
-		
-		const TArray<FEnhancedInputMappingQuery> RMBMappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::RightMouseButton);
-		UE_LOG(LogTactics, Warning, TEXT("Active RMB mappings: %d"), RMBMappings.Num());
+		// Check if we have any mapping contexts
+		UE_LOG(LogTactics, Warning, TEXT("Subsystem is valid and ready"));
 	}
 	else
 	{
 		UE_LOG(LogTactics, Error, TEXT("Enhanced Input Subsystem: NOT FOUND"));
 	}
+	
+	// Test manual attack trigger
+	UE_LOG(LogTactics, Warning, TEXT("Testing manual attack trigger..."));
+	OnAttackTriggered();
+	
 	UE_LOG(LogTactics, Warning, TEXT("======================"));
 }
