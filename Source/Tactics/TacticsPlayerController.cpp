@@ -149,10 +149,10 @@ void ATacticsPlayerController::BeginPlay()
 	UE_LOG(LogTactics, Warning, TEXT("Current Pawn: %s"), *GetNameSafe(GetPawn()));
 }
 
-void ATacticsPlayerController::Possess(APawn* InPawn)
+void ATacticsPlayerController::OnPossess(APawn* InPawn)
 {
-	Super::Possess(InPawn);
-	UE_LOG(LogTactics, Warning, TEXT("PlayerController Possess called with pawn: %s"), *GetNameSafe(InPawn));
+	Super::OnPossess(InPawn);
+	UE_LOG(LogTactics, Warning, TEXT("PlayerController OnPossess called with pawn: %s"), *GetNameSafe(InPawn));
 	UE_LOG(LogTactics, Warning, TEXT("Pawn class: %s"), InPawn ? *InPawn->GetClass()->GetName() : TEXT("NULL"));
 }
 
@@ -229,7 +229,7 @@ void ATacticsPlayerController::OnMoveTriggered(const FInputActionValue& Value)
 	if (ControlledPawn != nullptr)
 	{
 		// Calculate movement direction based on camera rotation
-		const FRotator YawRotation(0, GetControlRotation().Yaw, 0);
+		const FRotator YawRotation(0.0f, GetControlRotation().Yaw, 0.0f);
 		
 		// Forward/backward direction
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);

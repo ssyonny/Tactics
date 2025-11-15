@@ -10,6 +10,7 @@
 class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
+struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -78,7 +79,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	/** Called when possessing a pawn */
-	virtual void Possess(APawn* InPawn) override;
+	virtual void OnPossess(APawn* InPawn) override;
 	
 	/** Input handlers */
 	void OnInputStarted();
