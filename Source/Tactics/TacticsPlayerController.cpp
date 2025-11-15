@@ -28,13 +28,28 @@ ATacticsPlayerController::ATacticsPlayerController()
 	FollowTime = 0.f;
 
 	// Fallback: Auto-load input assets if not set via Blueprint
-	// Mapping Context
+	// Mapping Context - try both old and new
 	if (!DefaultMappingContext)
 	{
-		static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC(TEXT("/Game/TopDown/Input/IMC_Default.IMC_Default"));
-		if (IMC.Succeeded())
+		static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_New(TEXT("/Game/TopDown/Input/IMC_TacticsDefault.IMC_TacticsDefault"));
+		if (IMC_New.Succeeded())
 		{
-			DefaultMappingContext = IMC.Object;
+			DefaultMappingContext = IMC_New.Object;
+			UE_LOG(LogTactics, Warning, TEXT("Loaded IMC_TacticsDefault successfully"));
+		}
+		else
+		{
+			// Fallback to original
+			static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_Old(TEXT("/Game/TopDown/Input/IMC_Default.IMC_Default"));
+			if (IMC_Old.Succeeded())
+			{
+				DefaultMappingContext = IMC_Old.Object;
+				UE_LOG(LogTactics, Warning, TEXT("Loaded IMC_Default as fallback"));
+			}
+			else
+			{
+				UE_LOG(LogTactics, Error, TEXT("Failed to load both IMC_TacticsDefault and IMC_Default"));
+			}
 		}
 	}
 
@@ -93,8 +108,18 @@ void ATacticsPlayerController::SetupInputComponent()
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 			{
+				Subsystem->ClearAllMappings(); // Clear existing mappings first
 				Subsystem->AddMappingContext(DefaultMappingContext, 0);
+				UE_LOG(LogTactics, Warning, TEXT("Added mapping context successfully. Context name: %s"), *DefaultMappingContext->GetName());
 			}
+			else
+			{
+				UE_LOG(LogTactics, Error, TEXT("Failed to get Enhanced Input Local Player Subsystem"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTactics, Error, TEXT("DefaultMappingContext is null - cannot add mapping context"));
 		}
 
 		// Set up action bindings
@@ -145,8 +170,13 @@ void ATacticsPlayerController::SetupInputComponent()
 void ATacticsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTactics, Warning, TEXT("PlayerController BeginPlay called: %s"), *GetNameSafe(this));
+	UE_LOG(LogTactics, Warning, TEXT("=== PlayerController BeginPlay called: %s ==="), *GetNameSafe(this));
 	UE_LOG(LogTactics, Warning, TEXT("Current Pawn: %s"), *GetNameSafe(GetPawn()));
+	UE_LOG(LogTactics, Warning, TEXT("Is Local Player Controller: %s"), IsLocalPlayerController() ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTactics, Warning, TEXT("DefaultMappingContext: %s"), DefaultMappingContext ? TEXT("VALID") : TEXT("NULL"));
+	UE_LOG(LogTactics, Warning, TEXT("MoveAction: %s"), MoveAction ? TEXT("VALID") : TEXT("NULL"));
+	UE_LOG(LogTactics, Warning, TEXT("AttackAction: %s"), AttackAction ? TEXT("VALID") : TEXT("NULL"));
+	UE_LOG(LogTactics, Warning, TEXT("======================================"));
 }
 
 void ATacticsPlayerController::OnPossess(APawn* InPawn)
@@ -285,4 +315,28 @@ void ATacticsPlayerController::UpdateCharacterRotation()
 		// Smoothly rotate character
 		ControlledPawn->SetActorRotation(NewRotation);
 	}
+}
+
+void ATacticsPlayerController::TestInputSystem()
+{
+	UE_LOG(LogTactics, Warning, TEXT("=== INPUT SYSTEM TEST ===\"));
+	UE_LOG(LogTactics, Warning, TEXT(\"IsLocalPlayerController: %s\"), IsLocalPlayerController() ? TEXT(\"YES\") : TEXT(\"NO\"));
+	UE_LOG(LogTactics, Warning, TEXT(\"DefaultMappingContext: %s\"), DefaultMappingContext ? *DefaultMappingContext->GetName() : TEXT(\"NULL\"));
+	UE_LOG(LogTactics, Warning, TEXT(\"MoveAction: %s\"), MoveAction ? *MoveAction->GetName() : TEXT(\"NULL\"));
+	UE_LOG(LogTactics, Warning, TEXT(\"AttackAction: %s\"), AttackAction ? *AttackAction->GetName() : TEXT(\"NULL\"));
+	
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		UE_LOG(LogTactics, Warning, TEXT(\"Enhanced Input Subsystem: FOUND\"));
+		const TArray<FEnhancedInputMappingQuery> Mappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::W);
+		UE_LOG(LogTactics, Warning, TEXT(\"Active W key mappings: %d\"), Mappings.Num());
+		
+		const TArray<FEnhancedInputMappingQuery> RMBMappings = Subsystem->QueryMapKeyInActiveContexts(EKeys::RightMouseButton);
+		UE_LOG(LogTactics, Warning, TEXT(\"Active RMB mappings: %d\"), RMBMappings.Num());
+	}
+	else
+	{
+		UE_LOG(LogTactics, Error, TEXT(\"Enhanced Input Subsystem: NOT FOUND\"));
+	}
+	UE_LOG(LogTactics, Warning, TEXT(\"======================\"));
 }

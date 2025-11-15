@@ -99,6 +99,10 @@ private:
 	/** Update character rotation to face mouse cursor */
 	void UpdateCharacterRotation();
 
+	/** Debug function to test input system */
+	UFUNCTION(CallInEditor = true)
+	void TestInputSystem();
+
 };
 
 
