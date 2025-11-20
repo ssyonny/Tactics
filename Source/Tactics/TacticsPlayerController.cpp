@@ -291,8 +291,29 @@ void ATacticsPlayerController::OnAttackTriggered()
 	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(CurrentPawn))
 	{
 		UE_LOG(LogTactics, Warning, TEXT("Cast to ATacticsCharacter successful!"));
+		
+		// Test if we can call any function on the character
+		UE_LOG(LogTactics, Warning, TEXT("Character name: %s"), *ControlledCharacter->GetName());
+		UE_LOG(LogTactics, Warning, TEXT("Character location: %s"), *ControlledCharacter->GetActorLocation().ToString());
+		UE_LOG(LogTactics, Warning, TEXT("Character C++ class: %s"), *ControlledCharacter->GetClass()->GetName());
+		UE_LOG(LogTactics, Warning, TEXT("Is this actually ATacticsCharacter? %s"), ControlledCharacter->IsA<ATacticsCharacter>() ? TEXT("YES") : TEXT("NO"));
+		
+		// Test function first
+		UE_LOG(LogTactics, Warning, TEXT("About to call TestPerformAttack()..."));
+		ControlledCharacter->TestPerformAttack();
+		
+		// Emergency test first
+		UE_LOG(LogTactics, Warning, TEXT("About to call EmergencyAttackTest()..."));
+		ControlledCharacter->EmergencyAttackTest();
+		
+		// Test function first
+		UE_LOG(LogTactics, Warning, TEXT("About to call TestPerformAttack()..."));
+		ControlledCharacter->TestPerformAttack();
+		
 		// Perform attack
+		UE_LOG(LogTactics, Warning, TEXT("About to call PerformAttack()..."));
 		ControlledCharacter->PerformAttack();
+		UE_LOG(LogTactics, Warning, TEXT("Called PerformAttack() - check if PerformAttack logs appear"));
 	}
 	else
 	{
