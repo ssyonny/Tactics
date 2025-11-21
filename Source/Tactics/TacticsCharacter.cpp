@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TacticsCharacter.h"
+#include "Tactics.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
@@ -19,7 +21,7 @@
 #include "Camera/CameraShakeBase.h"
 #include "GameFramework/PlayerController.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogTactics, Log, All);
+DEFINE_LOG_CATEGORY(LogTactics);
 
 ATacticsCharacter::ATacticsCharacter()
 {
@@ -101,6 +103,12 @@ void ATacticsCharacter::PerformAttack()
 {
 	UE_LOG(LogTactics, Warning, TEXT("=== PERFORMATTACK FUNCTION ENTERED ==="));
 	UE_LOG(LogTactics, Warning, TEXT("PerformAttack called! CurrentCooldown: %f"), CurrentAttackCooldown);
+
+	// 공격 사운드 재생
+	if (AttackSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
+	}
 
 	// 쿨타임과 상관없이 항상 마우스/캐릭터 방향 로그 출력
 	FVector MouseWorldLocation, MouseWorldDirection, MouseIntersection(0,0,0);

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Sound/SoundBase.h"
 #include "GameFramework/Character.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
@@ -30,6 +31,10 @@ public:
 
 	/** Constructor */
 	ATacticsCharacter();
+
+	/** 공격 사운드 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* AttackSound;
 
 	/** Initialization */
 	virtual void BeginPlay() override;
