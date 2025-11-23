@@ -188,12 +188,18 @@ void ATacticsCharacter::PerformAttack()
 				// Calculate damage (assume 0 armor for now, will be updated later)
 				float Damage = CalculateDamage(0.0f);
 				
-				// Apply damage
-				// TODO: Implement damage system
-				UE_LOG(LogTactics, Log, TEXT("Hit %s with %f damage"), *HitActor->GetName(), Damage);
-				
-				// Spawn impact effect at hit location
-				SpawnImpactEffect(Hit.Location);
+				   // Apply damage
+				   // TODO: Implement damage system
+				   UE_LOG(LogTactics, Log, TEXT("Hit %s with %f damage"), *HitActor->GetName(), Damage);
+
+				   // 피격 사운드 재생
+				   if (HitSound)
+				   {
+					   UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitActor->GetActorLocation());
+				   }
+
+				   // Spawn impact effect at hit location
+				   SpawnImpactEffect(Hit.Location);
 			}
 		}
 	}

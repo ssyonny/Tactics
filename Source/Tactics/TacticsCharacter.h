@@ -36,6 +36,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundBase* AttackSound;
 
+	/** 피격 사운드 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* HitSound;
+
 	/** Initialization */
 	virtual void BeginPlay() override;
 
