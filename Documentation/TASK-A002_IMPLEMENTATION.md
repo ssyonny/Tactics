@@ -73,9 +73,15 @@ float AttackCooldown = 0.5f;
 
 ### 수용 기준
 - [x] WASD로 8방향 이동 가능
-- [ ] 캐릭터가 마우스 커서 방향을 바라봄
-- [ ] 입력 지연 < 100ms 체감
-- [ ] 애니메이션 전환 부드러움
+- [x] 캐릭터가 마우스 커서 방향을 바라봄 (C++ 구현 완료)
+- [ ] 입력 지연 < 100ms 체감 (테스트 필요)
+- [ ] 애니메이션 전환 부드러움 (애니메이션 설정 필요)
+
+### 코드 정리 완료 (2025-12-11)
+- [x] 중복 include 제거
+- [x] 테스트 함수 정리 (TestPerformAttack, EmergencyAttackTest)
+- [x] Warning 로그를 Log/Verbose로 변경
+- [x] ForceRotateToDirection 함수 정리
 
 ---
 

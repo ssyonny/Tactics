@@ -10,6 +10,11 @@
 ### ✅ 완료
 - [x] C++ 코드 구현 (Day 1)
 - [x] Git 커밋 & 푸시
+- [x] C++ 코드 정리 (2025-12-11)
+  - 중복 include 제거
+  - 테스트 함수 정리
+  - Warning 로그 정리
+
 
 ### 🔄 진행 중 (Day 2)
 - [ ] Input Action 생성 (IA_Move)

@@ -61,11 +61,29 @@ public:
 	/** Returns the Camera Boom component **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
+	/** Get current HP */
+	FORCEINLINE float GetCurrentHP() const { return CurrentHP; }
+
+	/** Get max HP */
+	FORCEINLINE float GetMaxHP() const { return MaxHP; }
+
+	/** Check if character is dead */
+	UFUNCTION(BlueprintPure, Category="Combat")
+	bool IsDead() const;
+
 protected:
 
 	/** Combat properties */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float BaseDamage = 20.0f;
+
+	/** Maximum Health Points */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float MaxHP = 100.0f;
+
+	/** Current Health Points */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
+	float CurrentHP = 100.0f;
 
 	/** Attack animation montages */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
@@ -76,6 +94,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
 	class UAnimMontage* AttackMontage3;
+
+	/** Death animation montage */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	class UAnimMontage* DeathMontage;
 
 	/** Attack visual effects */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects")
@@ -107,6 +129,19 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Combat")
 	float CalculateDamage(float TargetArmor) const;
 
+	/** Take damage and return actual damage taken */
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	/** Heal character */
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	void Heal(float HealAmount);
+
+	/** Called when character dies */
+	UFUNCTION(BlueprintNativeEvent, Category="Combat")
+	void OnDeath();
+	virtual void OnDeath_Implementation();
+
 	/** Play random attack animation */
 	UFUNCTION(BlueprintCallable, Category="Animation")
 	void PlayAttackAnimation();
@@ -134,6 +169,9 @@ protected:
 private:
 	/** Store last attack direction for consistency */
 	FVector LastAttackDirection = FVector::ForwardVector;
+
+	/** Yaw offset to compensate for mesh forward direction (degrees) */
+	static constexpr float MeshYawOffset = -90.0f;
 
 };
 

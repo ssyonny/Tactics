@@ -10,6 +10,7 @@
 class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
+class UPlayerHUDWidget;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -53,6 +54,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AttackAction;
 
+	/** HUD Widget Class */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UPlayerHUDWidget> HUDWidgetClass;
+
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
@@ -95,6 +100,10 @@ protected:
 	void OnAttackTriggered();
 
 private:
+
+	/** HUD Widget instance */
+	UPROPERTY()
+	UPlayerHUDWidget* HUDWidget;
 
 	/** Update character rotation to face mouse cursor */
 	void UpdateCharacterRotation();

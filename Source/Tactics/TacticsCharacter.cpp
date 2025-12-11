@@ -2,26 +2,30 @@
 
 #include "TacticsCharacter.h"
 #include "Tactics.h"
-#include "Kismet/GameplayStatics.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Camera/CameraComponent.h"
-#include "Components/DecalComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Materials/Material.h"
+
+// Core
 #include "Engine/World.h"
+#include "Engine/DamageEvents.h"
+
+// Gameplay
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
+// Components
+#include "Camera/CameraComponent.h"
+#include "Camera/CameraShakeBase.h"
+#include "Components/CapsuleComponent.h"
+
+// Animation
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
-#include "UObject/ConstructorHelpers.h"
+
+// Niagara VFX
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
-#include "Camera/CameraShakeBase.h"
-#include "GameFramework/PlayerController.h"
-
-DEFINE_LOG_CATEGORY(LogTactics);
 
 ATacticsCharacter::ATacticsCharacter()
 {
@@ -69,15 +73,16 @@ void ATacticsCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// stub
+	// Initialize HP
+	CurrentHP = MaxHP;
+
+	// TODO: Register with HUD when HUD system is implemented
 }
 
 void ATacticsCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-	// 쿨타임 상태 실시간 로그
-	UE_LOG(LogTactics, Warning, TEXT("[TICK] CurrentAttackCooldown: %f"), CurrentAttackCooldown);
 	// Update attack cooldown
 	if (CurrentAttackCooldown > 0.0f)
 	{
@@ -89,68 +94,43 @@ void ATacticsCharacter::Tick(float DeltaSeconds)
 
 void ATacticsCharacter::TestPerformAttack()
 {
-	UE_LOG(LogTactics, Warning, TEXT("=== TEST PERFORMATTACK FUNCTION ENTERED ==="));
-	UE_LOG(LogTactics, Warning, TEXT("TestPerformAttack called! This proves C++ code is working!"));
+	// Debug function - kept for future testing if needed
+	UE_LOG(LogTactics, Verbose, TEXT("TestPerformAttack called"));
 }
 
 void ATacticsCharacter::EmergencyAttackTest()
 {
-	UE_LOG(LogTactics, Warning, TEXT("=== EMERGENCY ATTACK TEST WORKING! ==="));
-	UE_LOG(LogTactics, Warning, TEXT("C++ CODE IS DEFINITELY WORKING!"));
+	// Debug function - kept for future testing if needed
+	UE_LOG(LogTactics, Verbose, TEXT("EmergencyAttackTest called"));
 }
 
 void ATacticsCharacter::PerformAttack()
 {
-	UE_LOG(LogTactics, Warning, TEXT("=== PERFORMATTACK FUNCTION ENTERED ==="));
-	UE_LOG(LogTactics, Warning, TEXT("PerformAttack called! CurrentCooldown: %f"), CurrentAttackCooldown);
+	UE_LOG(LogTactics, Verbose, TEXT("PerformAttack called"));
 
-	// 공격 사운드 재생
+	// Safety check for CDO and invalid state
+	if (!GetWorld())
+	{
+		return;
+	}
+
+	// Play attack sound
 	if (AttackSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
 	}
 
-	// 쿨타임과 상관없이 항상 마우스/캐릭터 방향 로그 출력
-	FVector MouseWorldLocation, MouseWorldDirection, MouseIntersection(0,0,0);
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		if (PC->DeprojectMousePositionToWorld(MouseWorldLocation, MouseWorldDirection))
-		{
-			FPlane GroundPlane(GetActorLocation(), FVector::UpVector);
-			MouseIntersection = FMath::LinePlaneIntersection(
-				MouseWorldLocation,
-				MouseWorldLocation + MouseWorldDirection * 10000.0f,
-				GroundPlane
-			);
-		}
-	}
-	FVector TempAttackDirection = (MouseIntersection - GetActorLocation()).GetSafeNormal();
-	TempAttackDirection.Z = 0.0f;
-	UE_LOG(LogTactics, Warning, TEXT("[DEBUG] MouseWorldLocation: %s"), *MouseWorldLocation.ToString());
-	UE_LOG(LogTactics, Warning, TEXT("[DEBUG] MouseIntersection(Ground): %s"), *MouseIntersection.ToString());
-	UE_LOG(LogTactics, Warning, TEXT("[DEBUG] TempAttackDirection: %s"), *TempAttackDirection.ToString());
-	UE_LOG(LogTactics, Warning, TEXT("[DEBUG] Actor Current Forward: %s"), *GetActorForwardVector().ToString());
-	UE_LOG(LogTactics, Warning, TEXT("[DEBUG] Actor Current Rotation: %s"), *GetActorRotation().ToString());
-
 	if (!CanAttack())
 	{
-		UE_LOG(LogTactics, Warning, TEXT("Attack blocked by cooldown! Remaining: %f"), CurrentAttackCooldown);
+		UE_LOG(LogTactics, Verbose, TEXT("Attack blocked by cooldown. Remaining: %f"), CurrentAttackCooldown);
 		return;
 	}
-
-	UE_LOG(LogTactics, Warning, TEXT("Attack allowed! Proceeding..."));
 
 	// Set cooldown
 	CurrentAttackCooldown = AttackCooldown;
 
 	// Get attack direction based on mouse position and store it
 	LastAttackDirection = GetAttackDirection();
-
-	// Debug the directions and positions (공격 허용 시)
-	UE_LOG(LogTactics, Warning, TEXT("=== ATTACK DIRECTION DEBUG ==="));
-	UE_LOG(LogTactics, Warning, TEXT("Raw Attack Direction: %s"), *LastAttackDirection.ToString());
-	UE_LOG(LogTactics, Warning, TEXT("Actor Current Forward: %s"), *GetActorForwardVector().ToString());
-	UE_LOG(LogTactics, Warning, TEXT("Actor Current Rotation: %s"), *GetActorRotation().ToString());
 
 	// Force immediate rotation to attack direction
 	ForceRotateToDirection(LastAttackDirection);
@@ -188,18 +168,22 @@ void ATacticsCharacter::PerformAttack()
 				// Calculate damage (assume 0 armor for now, will be updated later)
 				float Damage = CalculateDamage(0.0f);
 				
-				   // Apply damage
-				   // TODO: Implement damage system
-				   UE_LOG(LogTactics, Log, TEXT("Hit %s with %f damage"), *HitActor->GetName(), Damage);
+			
+			// Apply damage to target if it's a TacticsCharacter
+			if (ATacticsCharacter* TargetCharacter = Cast<ATacticsCharacter>(HitActor))
+			{
+				FDamageEvent DamageEvent;
+				TargetCharacter->TakeDamage(Damage, DamageEvent, GetController(), this);
+			}				UE_LOG(LogTactics, Log, TEXT("Hit %s with %f damage"), *HitActor->GetName(), Damage);
 
-				   // 피격 사운드 재생
-				   if (HitSound)
-				   {
-					   UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitActor->GetActorLocation());
-				   }
+				// 피격 사운드 재생
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitActor->GetActorLocation());
+				}
 
-				   // Spawn impact effect at hit location
-				   SpawnImpactEffect(Hit.Location);
+				// Spawn impact effect at hit location
+				SpawnImpactEffect(Hit.Location);
 			}
 		}
 	}
@@ -218,9 +202,7 @@ void ATacticsCharacter::PerformAttack()
 
 bool ATacticsCharacter::CanAttack() const
 {
-	bool bCanAttack = CurrentAttackCooldown <= 0.0f;
-	UE_LOG(LogTactics, Warning, TEXT("CanAttack: %s (Cooldown: %f)"), bCanAttack ? TEXT("TRUE") : TEXT("FALSE"), CurrentAttackCooldown);
-	return bCanAttack;
+	return CurrentAttackCooldown <= 0.0f;
 }
 
 float ATacticsCharacter::CalculateDamage(float TargetArmor) const
@@ -228,6 +210,84 @@ float ATacticsCharacter::CalculateDamage(float TargetArmor) const
 	// Damage formula: DamageTaken = round(BaseDamage * 100/(100+Armor))
 	float DamageMultiplier = 100.0f / (100.0f + TargetArmor);
 	return FMath::RoundToFloat(BaseDamage * DamageMultiplier);
+}
+
+float ATacticsCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (IsDead())
+	{
+		return 0.0f;
+	}
+
+	float ActualDamage = FMath::Min(DamageAmount, CurrentHP);
+	CurrentHP -= ActualDamage;
+
+	UE_LOG(LogTactics, Log, TEXT("%s took %f damage. HP: %f/%f"), *GetName(), ActualDamage, CurrentHP, MaxHP);
+
+	// Show damage number on HUD
+	// TODO: Implement HUD damage numbers later
+	/*
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (ATacticsHUD* TacticsHUD = Cast<ATacticsHUD>(PC->GetHUD()))
+		{
+			TacticsHUD->ShowDamageNumber(ActualDamage, GetActorLocation());
+		}
+	}
+	*/
+
+	if (IsDead())
+	{
+		OnDeath();
+	}
+
+	return ActualDamage;
+}
+
+void ATacticsCharacter::Heal(float HealAmount)
+{
+	if (IsDead())
+	{
+		return;
+	}
+
+	float OldHP = CurrentHP;
+	CurrentHP = FMath::Min(CurrentHP + HealAmount, MaxHP);
+	
+	UE_LOG(LogTactics, Log, TEXT("%s healed %f. HP: %f/%f"), *GetName(), CurrentHP - OldHP, CurrentHP, MaxHP);
+}
+
+bool ATacticsCharacter::IsDead() const
+{
+	return CurrentHP <= 0.0f;
+}
+
+void ATacticsCharacter::OnDeath_Implementation()
+{
+	UE_LOG(LogTactics, Log, TEXT("%s has died!"), *GetName());
+	
+	// Disable movement
+	GetCharacterMovement()->DisableMovement();
+	
+	// Disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	// Play death animation
+	if (DeathMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(DeathMontage);
+			UE_LOG(LogTactics, Verbose, TEXT("Playing death animation: %s"), *DeathMontage->GetName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTactics, Verbose, TEXT("No death animation set"));
+	}
+	
+	// TODO: Spawn death effects, handle respawn, etc.
 }
 
 void ATacticsCharacter::PlayAttackAnimation()
@@ -251,60 +311,49 @@ void ATacticsCharacter::PlayAttackAnimation()
 
 	if (SelectedMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		UE_LOG(LogTactics, Warning, TEXT("Playing attack animation: %s"), *SelectedMontage->GetName());
+		UE_LOG(LogTactics, Verbose, TEXT("Playing attack animation: %s"), *SelectedMontage->GetName());
 		GetMesh()->GetAnimInstance()->Montage_Play(SelectedMontage);
 	}
 	else
 	{
-		UE_LOG(LogTactics, Warning, TEXT("No attack animation available, using fallback"));
-		// If no animation, the attack logic already executed above
+		UE_LOG(LogTactics, Verbose, TEXT("No attack animation available"));
 	}
 }
 
 void ATacticsCharacter::OnAttackAnimationFinished()
 {
-	UE_LOG(LogTactics, Warning, TEXT("Attack animation finished"));
 	// This function can be called from animation blueprint when montage finishes
-	// Additional logic can be added here if needed
 }
 
 void ATacticsCharacter::SpawnAttackEffects()
 {
+	// Safety check
+	if (!GetWorld())
+	{
+		return;
+	}
+	
 	// Activate trail effect during attack
 	if (TrailComponent && AttackTrailEffect)
 	{
 		TrailComponent->SetAsset(AttackTrailEffect);
-		TrailComponent->SetRelativeScale3D(FVector(2.0f, 2.0f, 2.0f)); // 2배 크기
+		TrailComponent->SetRelativeScale3D(FVector(2.0f, 2.0f, 2.0f));
 		
-		// Use stored last attack direction for perfect consistency
+		// Align trail with attack direction (world space - no mesh offset needed)
 		FRotator TrailRotation = LastAttackDirection.Rotation();
-		
-		// Set world rotation instead of relative rotation for accuracy
 		TrailComponent->SetWorldRotation(TrailRotation);
 		
 		TrailComponent->Activate(true);
 		
-		// Debug logs
-		UE_LOG(LogTactics, Warning, TEXT("=== TRAIL EFFECTS DEBUG ==="));
-		UE_LOG(LogTactics, Warning, TEXT("Stored Attack Direction: %s"), *LastAttackDirection.ToString());
-		UE_LOG(LogTactics, Warning, TEXT("Trail Rotation (from direction): %s"), *TrailRotation.ToString());
-		UE_LOG(LogTactics, Warning, TEXT("Actor Rotation: %s"), *GetActorRotation().ToString());
-		UE_LOG(LogTactics, Warning, TEXT("Actor Forward After Rotation: %s"), *GetActorForwardVector().ToString());
-		
-		// Compare if they match
-		FVector ActorForward = GetActorForwardVector();
-		float DotProduct = FVector::DotProduct(LastAttackDirection, ActorForward);
-		UE_LOG(LogTactics, Warning, TEXT("Direction Match (1.0 = perfect): %f"), DotProduct);
-		
-		// Deactivate trail after longer duration for better visibility
+		// Deactivate trail after duration
 		FTimerHandle TrailTimer;
 		GetWorld()->GetTimerManager().SetTimer(TrailTimer, [this]()
 		{
-			if (TrailComponent)
+			if (IsValid(this) && TrailComponent)
 			{
 				TrailComponent->Deactivate();
 			}
-		}, 2.0f, false); // 2초로 늘림
+		}, 2.0f, false);
 	}
 }
 
@@ -318,9 +367,8 @@ void ATacticsCharacter::SpawnImpactEffect(FVector Location)
 			AttackImpactEffect,
 			Location,
 			FRotator::ZeroRotator,
-			FVector(3.0f, 3.0f, 3.0f) // 3배 크기로 더 잘 보이게
+			FVector(3.0f, 3.0f, 3.0f)
 		);
-		UE_LOG(LogTactics, Warning, TEXT("Impact effect spawned at location: %s"), *Location.ToString());
 	}
 }
 
@@ -353,16 +401,11 @@ FVector ATacticsCharacter::GetAttackDirection() const
 				AttackDirection = GetActorForwardVector();
 			}
 			
-			// Debug log
-			UE_LOG(LogTactics, Warning, TEXT("Mouse Intersection: %s, Attack Direction: %s"), 
-				*IntersectionPoint.ToString(), *AttackDirection.ToString());
-			
 			return AttackDirection;
 		}
 	}
 	
 	// Fallback to forward vector
-	UE_LOG(LogTactics, Warning, TEXT("Using fallback forward vector"));
 	return GetActorForwardVector();
 }
 
@@ -373,43 +416,34 @@ void ATacticsCharacter::ForceRotateToDirection(FVector Direction)
 		return;
 	}
 	
-	// Test different rotation corrections to find the right one
-	FRotator BaseRotation = Direction.Rotation();
-	FRotator TestRotations[4] = {
-		BaseRotation,                    // 0도 (원본)
-		BaseRotation + FRotator(0, 90, 0),   // +90도
-		BaseRotation + FRotator(0, 180, 0),  // +180도
-		BaseRotation + FRotator(0, -90, 0)   // -90도
-	};
+	// Safety check for CDO and invalid state
+	if (!GetWorld() || !GetCharacterMovement())
+	{
+		return;
+	}
 	
-	UE_LOG(LogTactics, Warning, TEXT("=== ROTATION TESTING ==="));
-	UE_LOG(LogTactics, Warning, TEXT("Direction Vector: %s"), *Direction.ToString());
-	UE_LOG(LogTactics, Warning, TEXT("Base Rotation (0°): %f"), BaseRotation.Yaw);
-	UE_LOG(LogTactics, Warning, TEXT("Test +90°: %f"), TestRotations[1].Yaw);
-	UE_LOG(LogTactics, Warning, TEXT("Test +180°: %f"), TestRotations[2].Yaw);
-	UE_LOG(LogTactics, Warning, TEXT("Test -90°: %f"), TestRotations[3].Yaw);
-	
-	// Use the original rotation for now to see which one is correct
-	FRotator TargetRotation = BaseRotation;
+	// Calculate target rotation from direction
+	// Note: MeshYawOffset compensates for mesh forward direction mismatch
+	// Most character meshes face +Y (right) instead of +X (forward) in their default pose
+	FRotator TargetRotation = Direction.Rotation();
+	TargetRotation.Yaw += MeshYawOffset; // Compensate for mesh orientation
 	
 	// Temporarily disable movement-based rotation for precise control
-	bool bOriginalOrientRotation = GetCharacterMovement()->bOrientRotationToMovement;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
+	bool bOriginalOrientRotation = MovementComp->bOrientRotationToMovement;
+	MovementComp->bOrientRotationToMovement = false;
 	
 	// Apply immediate rotation
 	SetActorRotation(TargetRotation);
-	
-	// Verify and log the rotation
-	FRotator CurrentRotation = GetActorRotation();
-	
-	UE_LOG(LogTactics, Warning, TEXT("APPLIED - Target Yaw: %f, Current Yaw: %f"), 
-		TargetRotation.Yaw, CurrentRotation.Yaw);
-	UE_LOG(LogTactics, Warning, TEXT("New Forward Vector: %s"), *GetActorForwardVector().ToString());
 	
 	// Restore movement rotation after a short delay
 	FTimerHandle RestoreMovementTimer;
 	GetWorld()->GetTimerManager().SetTimer(RestoreMovementTimer, [this, bOriginalOrientRotation]()
 	{
-		GetCharacterMovement()->bOrientRotationToMovement = bOriginalOrientRotation;
+		if (IsValid(this) && GetCharacterMovement())
+		{
+			GetCharacterMovement()->bOrientRotationToMovement = bOriginalOrientRotation;
+		}
 	}, 0.2f, false);
 }
+

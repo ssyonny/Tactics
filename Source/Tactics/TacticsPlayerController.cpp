@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TacticsPlayerController.h"
+#include "PlayerHUDWidget.h"
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
@@ -15,6 +16,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/LocalPlayer.h"
 #include "Tactics.h"
+#include "Blueprint/UserWidget.h"
 
 ATacticsPlayerController::ATacticsPlayerController()
 {
@@ -170,13 +172,27 @@ void ATacticsPlayerController::SetupInputComponent()
 void ATacticsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTactics, Warning, TEXT("=== PlayerController BeginPlay called: %s ==="), *GetNameSafe(this));
-	UE_LOG(LogTactics, Warning, TEXT("Current Pawn: %s"), *GetNameSafe(GetPawn()));
-	UE_LOG(LogTactics, Warning, TEXT("Is Local Player Controller: %s"), IsLocalPlayerController() ? TEXT("YES") : TEXT("NO"));
-	UE_LOG(LogTactics, Warning, TEXT("DefaultMappingContext: %s"), DefaultMappingContext ? TEXT("VALID") : TEXT("NULL"));
-	UE_LOG(LogTactics, Warning, TEXT("MoveAction: %s"), MoveAction ? TEXT("VALID") : TEXT("NULL"));
-	UE_LOG(LogTactics, Warning, TEXT("AttackAction: %s"), AttackAction ? TEXT("VALID") : TEXT("NULL"));
-	UE_LOG(LogTactics, Warning, TEXT("======================================"));
+	
+	// Create HUD widget
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UPlayerHUDWidget>(this, HUDWidgetClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToViewport();
+			
+			// Set the controlled character
+			if (ATacticsCharacter* TacticsChar = Cast<ATacticsCharacter>(GetPawn()))
+			{
+				HUDWidget->SetCharacter(TacticsChar);
+				UE_LOG(LogTactics, Warning, TEXT("HUD Widget created and character set"));
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTactics, Warning, TEXT("HUDWidgetClass not set in PlayerController!"));
+	}
 }
 
 void ATacticsPlayerController::OnPossess(APawn* InPawn)
@@ -276,48 +292,14 @@ void ATacticsPlayerController::OnMoveTriggered(const FInputActionValue& Value)
 
 void ATacticsPlayerController::OnAttackTriggered()
 {
-	UE_LOG(LogTactics, Warning, TEXT("OnAttackTriggered called!"));
-	
-	// Get the controlled character
-	APawn* CurrentPawn = GetPawn();
-	if (!CurrentPawn)
+	// Get the controlled character and perform attack
+	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(GetPawn()))
 	{
-		UE_LOG(LogTactics, Error, TEXT("No pawn possessed!"));
-		return;
-	}
-	
-	UE_LOG(LogTactics, Warning, TEXT("Current pawn class: %s"), *CurrentPawn->GetClass()->GetName());
-	
-	if (ATacticsCharacter* ControlledCharacter = Cast<ATacticsCharacter>(CurrentPawn))
-	{
-		UE_LOG(LogTactics, Warning, TEXT("Cast to ATacticsCharacter successful!"));
-		
-		// Test if we can call any function on the character
-		UE_LOG(LogTactics, Warning, TEXT("Character name: %s"), *ControlledCharacter->GetName());
-		UE_LOG(LogTactics, Warning, TEXT("Character location: %s"), *ControlledCharacter->GetActorLocation().ToString());
-		UE_LOG(LogTactics, Warning, TEXT("Character C++ class: %s"), *ControlledCharacter->GetClass()->GetName());
-		UE_LOG(LogTactics, Warning, TEXT("Is this actually ATacticsCharacter? %s"), ControlledCharacter->IsA<ATacticsCharacter>() ? TEXT("YES") : TEXT("NO"));
-		
-		// Test function first
-		UE_LOG(LogTactics, Warning, TEXT("About to call TestPerformAttack()..."));
-		ControlledCharacter->TestPerformAttack();
-		
-		// Emergency test first
-		UE_LOG(LogTactics, Warning, TEXT("About to call EmergencyAttackTest()..."));
-		ControlledCharacter->EmergencyAttackTest();
-		
-		// Test function first
-		UE_LOG(LogTactics, Warning, TEXT("About to call TestPerformAttack()..."));
-		ControlledCharacter->TestPerformAttack();
-		
-		// Perform attack
-		UE_LOG(LogTactics, Warning, TEXT("About to call PerformAttack()..."));
 		ControlledCharacter->PerformAttack();
-		UE_LOG(LogTactics, Warning, TEXT("Called PerformAttack() - check if PerformAttack logs appear"));
 	}
 	else
 	{
-		UE_LOG(LogTactics, Error, TEXT("Cast to ATacticsCharacter failed! Pawn class: %s"), *CurrentPawn->GetClass()->GetName());
+		UE_LOG(LogTactics, Warning, TEXT("OnAttackTriggered: No valid TacticsCharacter possessed"));
 	}
 }
 

@@ -9,6 +9,8 @@ ATacticsGameMode::ATacticsGameMode()
 {
 	// Set defaults so the game runs without Blueprint overrides
 	PlayerControllerClass = ATacticsPlayerController::StaticClass();
+	// TODO: HUD disabled for now - causes crash on initialization
+	// HUDClass = ATacticsHUD::StaticClass();
 	
 	// Try to load BP_TacticsCharacter first, fallback to C++ class
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TacticsCharacter"));
