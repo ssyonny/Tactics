@@ -38,7 +38,7 @@ public:
 
 	/** Attack the player */
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	void AttackPlayer();
+	virtual void AttackPlayer();
 
 protected:
 	/** Detection range - how far the enemy can see the player */
@@ -69,10 +69,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards")
 	int32 ExpValue = 25;
 
-	/** Called when this enemy dies */
-	virtual void OnDeath_Implementation() override;
-
-private:
 	/** Cached reference to player character */
 	UPROPERTY()
 	class ATacticsCharacter* PlayerCharacter;
@@ -80,6 +76,10 @@ private:
 	/** Timer for attack cooldown */
 	float AttackCooldownTimer = 0.0f;
 
+	/** Called when this enemy dies */
+	virtual void OnDeath_Implementation() override;
+
+private:
 	/** Find and cache player reference */
 	void FindPlayer();
 

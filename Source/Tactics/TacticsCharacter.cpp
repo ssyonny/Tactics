@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TacticsCharacter.h"
+#include "DamageNumberWidget.h"
 #include "Tactics.h"
 
 // Core
@@ -224,17 +225,8 @@ float ATacticsCharacter::TakeDamage(float DamageAmount, struct FDamageEvent cons
 
 	UE_LOG(LogTactics, Log, TEXT("%s took %f damage. HP: %f/%f"), *GetName(), ActualDamage, CurrentHP, MaxHP);
 
-	// Show damage number on HUD
-	// TODO: Implement HUD damage numbers later
-	/*
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-	{
-		if (ATacticsHUD* TacticsHUD = Cast<ATacticsHUD>(PC->GetHUD()))
-		{
-			TacticsHUD->ShowDamageNumber(ActualDamage, GetActorLocation());
-		}
-	}
-	*/
+	// Show floating damage number above character
+	ShowDamageNumber(ActualDamage, false);
 
 	if (IsDead())
 	{
@@ -242,6 +234,54 @@ float ATacticsCharacter::TakeDamage(float DamageAmount, struct FDamageEvent cons
 	}
 
 	return ActualDamage;
+}
+
+void ATacticsCharacter::ShowDamageNumber(float Damage, bool bIsCritical)
+{
+	// Skip if this is the Class Default Object (CDO) - prevents crash
+	if (HasAnyFlags(RF_ClassDefaultObject) || IsTemplate())
+	{
+		return;
+	}
+
+	// Safety checks
+	if (!GetWorld() || !DamageNumberWidgetClass)
+	{
+		UE_LOG(LogTactics, Verbose, TEXT("Cannot show damage number: World=%s, WidgetClass=%s"), 
+			GetWorld() ? TEXT("Valid") : TEXT("Null"),
+			DamageNumberWidgetClass ? TEXT("Valid") : TEXT("Null"));
+		return;
+	}
+
+	// Additional safety: check if we're in a valid game world
+	if (!GetWorld()->IsGameWorld())
+	{
+		return;
+	}
+
+	// Get player controller to create widget
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (!PC)
+	{
+		return;
+	}
+
+	// Create damage number widget
+	UDamageNumberWidget* DamageWidget = CreateWidget<UDamageNumberWidget>(PC, DamageNumberWidgetClass);
+	if (DamageWidget)
+	{
+		// Set damage value and critical state
+		DamageWidget->SetDamage(Damage, bIsCritical);
+		
+		// Set world location (slightly above character head)
+		FVector DamageLocation = GetActorLocation() + FVector(0.0f, 0.0f, 100.0f);
+		DamageWidget->SetWorldLocation(DamageLocation);
+		
+		// Add to viewport
+		DamageWidget->AddToViewport(100); // High Z-order to be on top
+		
+		UE_LOG(LogTactics, Verbose, TEXT("Spawned damage number: %f at %s"), Damage, *DamageLocation.ToString());
+	}
 }
 
 void ATacticsCharacter::Heal(float HealAmount)

@@ -9,6 +9,8 @@
 #include "NiagaraSystem.h"
 #include "TacticsCharacter.generated.h"
 
+class UDamageNumberWidget;
+
 /**
  *  A controllable top-down perspective character
  */
@@ -119,8 +121,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects")
 	TSubclassOf<class UCameraShakeBase> AttackCameraShake;
 
+	/** Damage number widget class for displaying floating damage */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UDamageNumberWidget> DamageNumberWidgetClass;
+
 	/** Current attack cooldown timer */
 	float CurrentAttackCooldown = 0.0f;
+
+	/** Helper function to show floating damage number */
+	void ShowDamageNumber(float Damage, bool bIsCritical = false);
 
 	/** Check if can attack */
 	bool CanAttack() const;
