@@ -1,0 +1,84 @@
+# Unreal Engine Gitignore
+
+# Visual Studio 2015/2017/2019/2022 cache/options directory
+.vs/
+
+# Visual Studio Code cache/options directory  
+.vscode/
+
+# Unreal Engine cache and temporary files
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Backup and temporary files
+*.tmp
+*_BuiltData.uasset
+Backup/
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+
+# Log files
+*.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Android
+.gradle/
+
+# iOS
+*.ipa
+*.app
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build files that can be regenerated
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+# Keep important project files
+!*.uproject
+!*.uplugin
+
+# Source control files
+.git/
+.svn/
+
+# Claude Code
+.claude/
